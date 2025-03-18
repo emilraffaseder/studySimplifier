@@ -14,12 +14,14 @@ router.get('/', auth, async (req, res) => {
 
 // Neues Todo erstellen
 router.post('/', auth, async (req, res) => {
-  const { title, dueDate } = req.body
+  const { title, dueDate, category, color } = req.body
 
   try {
     const newTodo = new Todo({
       title,
       dueDate,
+      category,
+      color,
       user: req.user.id
     })
 
@@ -49,8 +51,10 @@ router.delete('/:id', auth, async (req, res) => {
   }
 })
 
-// Todo Status ändern
+// Todo aktualisieren
 router.put('/:id', auth, async (req, res) => {
+  const { completed, title, dueDate, category, color } = req.body
+  
   try {
     const todo = await Todo.findById(req.params.id)
     if (!todo) {
@@ -61,10 +65,17 @@ router.put('/:id', auth, async (req, res) => {
       return res.status(401).json({ msg: 'Nicht autorisiert' })
     }
 
-    todo.completed = !todo.completed
+    // Aktualisiere die Felder, die im Request enthalten sind
+    if (completed !== undefined) todo.completed = completed
+    if (title) todo.title = title
+    if (dueDate !== undefined) todo.dueDate = dueDate
+    if (category) todo.category = category
+    if (color) todo.color = color
+
     await todo.save()
     res.json(todo)
   } catch (err) {
+    console.error('Error updating todo:', err)
     res.status(500).send('Server Error')
   }
 })

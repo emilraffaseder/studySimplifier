@@ -11,7 +11,44 @@ const userSchema = new mongoose.Schema({
     type: String,
     required: true
   },
-  name: String,
+  firstName: {
+    type: String,
+    required: true
+  },
+  lastName: {
+    type: String,
+    required: true
+  },
+  profileImage: {
+    type: String,
+    default: ''
+  },
+  notifications: {
+    email: {
+      enabled: {
+        type: Boolean,
+        default: false
+      },
+      dueTasks: {
+        type: Boolean,
+        default: true
+      },
+      newFeatures: {
+        type: Boolean,
+        default: true
+      }
+    },
+    desktop: {
+      enabled: {
+        type: Boolean,
+        default: false
+      },
+      dueTasks: {
+        type: Boolean,
+        default: true
+      }
+    }
+  },
   createdAt: {
     type: Date,
     default: Date.now

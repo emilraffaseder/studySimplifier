@@ -12,6 +12,14 @@ const todoSchema = new mongoose.Schema({
     type: Boolean,
     default: false
   },
+  category: {
+    type: String,
+    default: 'default'
+  },
+  color: {
+    type: String,
+    default: '#67329E' // Default violet color
+  },
   user: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',

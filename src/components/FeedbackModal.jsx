@@ -2,7 +2,10 @@ import { XMarkIcon } from '@heroicons/react/24/outline'
 
 function FeedbackModal({ onClose }) {
   return (
-    <div className="fixed bottom-4 left-4 bg-[#67329E] p-6 rounded-lg text-white max-w-xs">
+    <div 
+      className="fixed bottom-4 left-4 p-6 rounded-lg text-white max-w-xs"
+      style={{ backgroundColor: 'var(--theme-color)' }}
+    >
       <button 
         onClick={onClose} 
         className="absolute top-2 right-2 text-gray-300 hover:text-white"

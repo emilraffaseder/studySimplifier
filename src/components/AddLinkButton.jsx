@@ -15,7 +15,8 @@ function AddLinkButton() {
     <>
       <button 
         onClick={() => setShowModal(true)}
-        className="fixed bottom-4 right-4 bg-[#67329E] text-white px-6 py-3 rounded-lg flex items-center gap-2 hover:bg-[#7b3db8] transition-colors"
+        className="fixed bottom-4 right-4 text-white px-6 py-3 rounded-lg flex items-center gap-2 hover:opacity-90 transition-colors"
+        style={{ backgroundColor: 'var(--theme-color)' }}
       >
         <PlusIcon className="h-5 w-5" />
         Links hinzufügen
