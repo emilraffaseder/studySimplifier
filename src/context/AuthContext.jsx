@@ -96,6 +96,24 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const updateUserProfile = async (profileData) => {
+    try {
+      const response = await api.updateUserProfile(profileData);
+      if (response.success) {
+        setUser(prevUser => ({
+          ...prevUser,
+          firstName: profileData.firstName,
+          lastName: profileData.lastName,
+          email: profileData.email
+        }));
+      }
+      return response;
+    } catch (error) {
+      console.error('Fehler beim Aktualisieren des Profils:', error);
+      throw error;
+    }
+  };
+
   const changePassword = async (currentPassword, newPassword, confirmPassword) => {
     try {
       const response = await api.changePassword(currentPassword, newPassword, confirmPassword);
@@ -131,6 +149,7 @@ export const AuthProvider = ({ children }) => {
         logout,
         fetchUserData,
         updateProfileImage,
+        updateUserProfile,
         changePassword,
         deleteAccount
       }}

@@ -60,6 +60,9 @@ function Sidebar() {
   const textMutedClass = theme === 'light' ? 'text-gray-500' : 'text-gray-400'
   const borderClass = theme === 'light' ? 'border-gray-300' : 'border-gray-700'
   const hoverBgClass = theme === 'light' ? 'hover:bg-gray-200' : 'hover:bg-[#333333]'
+  
+  // Logo inversion for light mode
+  const logoStyle = theme === 'light' ? { filter: 'invert(1)' } : {}
 
   return (
     <>
@@ -70,6 +73,7 @@ function Sidebar() {
             src="/icons/LogoStudySimplifier.png"
             alt="Study Simplifier Logo"
             className="h-8 mr-3"
+            style={logoStyle}
           />
           <div>
             <p className={`text-sm ${textMutedClass}`}>
@@ -141,9 +145,10 @@ function Sidebar() {
             src="/icons/LogoStudySimplifier.png"
             alt="Study Simplifier Logo"
             className="h-16 mb-2"
+            style={logoStyle}
           />
           <p className={`text-sm ${textMutedClass} mt-1 mb-4`}>
-            Dein Studiums-Helfer
+            Learn Simple.
           </p>
           
           {isLoggedIn && (
@@ -188,7 +193,7 @@ function Sidebar() {
 
         <div className={`p-4 border-t ${borderClass} mt-auto`}>
           <div className={`text-xs text-center ${textMutedClass}`}>
-            &copy; 2024 Study Simplifier
+            &copy; 2025 Study Simplifier
           </div>
         </div>
       </div>

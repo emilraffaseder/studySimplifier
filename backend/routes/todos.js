@@ -14,7 +14,7 @@ router.get('/', auth, async (req, res) => {
 
 // Neues Todo erstellen
 router.post('/', auth, async (req, res) => {
-  const { title, dueDate, category, color } = req.body
+  const { title, dueDate, category, color, priority } = req.body
 
   try {
     const newTodo = new Todo({
@@ -22,6 +22,7 @@ router.post('/', auth, async (req, res) => {
       dueDate,
       category,
       color,
+      priority,
       user: req.user.id
     })
 
@@ -53,7 +54,7 @@ router.delete('/:id', auth, async (req, res) => {
 
 // Todo aktualisieren
 router.put('/:id', auth, async (req, res) => {
-  const { completed, title, dueDate, category, color } = req.body
+  const { completed, title, dueDate, category, color, priority } = req.body
   
   try {
     const todo = await Todo.findById(req.params.id)
@@ -71,6 +72,7 @@ router.put('/:id', auth, async (req, res) => {
     if (dueDate !== undefined) todo.dueDate = dueDate
     if (category) todo.category = category
     if (color) todo.color = color
+    if (priority) todo.priority = priority
 
     await todo.save()
     res.json(todo)

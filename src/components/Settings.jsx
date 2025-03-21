@@ -3,6 +3,7 @@ import { useTheme } from '../context/ThemeContext'
 import { useThemeColor } from '../context/ThemeColorContext'
 import { useNotifications } from '../context/NotificationContext'
 import { useAuth } from '../context/AuthContext'
+import { useLanguage } from '../context/LanguageContext'
 import { 
   BellAlertIcon, 
   EnvelopeIcon, 
@@ -21,12 +22,6 @@ import TextField from '@mui/material/TextField'
 import CircularProgress from '@mui/material/CircularProgress'
 import Alert from '@mui/material/Alert'
 
-// Spracheinstellungen
-const languages = [
-  { code: 'de', name: 'Deutsch' },
-  { code: 'en', name: 'English' }
-]
-
 function Settings() {
   const { theme, toggleTheme } = useTheme()
   const { themeColor, changeThemeColor } = useThemeColor()
@@ -39,11 +34,11 @@ function Settings() {
     requestDesktopPermission
   } = useNotifications()
   const { user, deleteAccount } = useAuth()
+  const { language, languages, changeLanguage, t } = useLanguage()
   
   const [customColor, setCustomColor] = useState(themeColor)
   const [saved, setSaved] = useState(false)
   const [saveError, setSaveError] = useState(null)
-  const [language, setLanguage] = useState('de')
   
   // Account löschen Dialog
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
@@ -81,14 +76,6 @@ function Settings() {
     }
   }, [settings, loading])
 
-  // Sprache aus dem localStorage laden
-  useEffect(() => {
-    const savedLanguage = localStorage.getItem('language')
-    if (savedLanguage) {
-      setLanguage(savedLanguage)
-    }
-  }, [])
-
   const handleColorChange = (color) => {
     setCustomColor(color)
     changeThemeColor(color)
@@ -96,8 +83,7 @@ function Settings() {
 
   const handleLanguageChange = (e) => {
     const newLanguage = e.target.value
-    setLanguage(newLanguage)
-    localStorage.setItem('language', newLanguage)
+    changeLanguage(newLanguage)
   }
 
   const handleSaveNotificationSettings = async () => {
@@ -108,7 +94,7 @@ function Settings() {
     if (desktopEnabled && permissionStatus !== 'granted') {
       const granted = await requestDesktopPermission()
       if (!granted) {
-        setSaveError('Desktop-Benachrichtigungserlaubnis wurde abgelehnt.')
+        setSaveError(t('settings.settingsError'))
         return
       }
     }
@@ -130,7 +116,7 @@ function Settings() {
       setSaved(true)
       setTimeout(() => setSaved(false), 3000)
     } else {
-      setSaveError('Fehler beim Speichern der Einstellungen.')
+      setSaveError(t('settings.settingsError'))
     }
   }
   
@@ -146,7 +132,7 @@ function Settings() {
   
   const handleDeleteConfirm = async () => {
     if (!deletePassword) {
-      setDeleteError('Bitte gib dein Passwort ein.')
+      setDeleteError(t('settings.enterPassword'))
       return
     }
     
@@ -155,20 +141,20 @@ function Settings() {
       await deleteAccount(deletePassword)
       // No need to close dialog or do anything else as successful deletion will log the user out
     } catch (error) {
-      setDeleteError(error.response?.data?.msg || 'Fehler beim Löschen des Accounts.')
+      setDeleteError(error.response?.data?.msg || t('settings.deleteError'))
       setIsDeleting(false)
     }
   }
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold">Einstellungen</h1>
+      <h1 className="text-2xl font-bold">{t('nav.settings')}</h1>
       
       <div className="bg-gray-100 dark:bg-[#242424] p-6 rounded-lg">
-        <h2 className="text-xl font-bold mb-4">Erscheinungsbild</h2>
+        <h2 className="text-xl font-bold mb-4">{t('settings.appearance')}</h2>
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-medium mb-2">Theme</label>
+            <label className="block text-sm font-medium mb-2">{t('settings.theme')}</label>
             <select 
               value={theme}
               onChange={(e) => toggleTheme()}
@@ -180,7 +166,7 @@ function Settings() {
           </div>
           
           <div>
-            <label className="block text-sm font-medium mb-2">Themefarbe</label>
+            <label className="block text-sm font-medium mb-2">{t('settings.themeColor')}</label>
             <div className="grid grid-cols-4 gap-2 mb-3">
               {colorOptions.map((option) => (
                 <button
@@ -213,13 +199,13 @@ function Settings() {
           </div>
           
           <div>
-            <label className="block text-sm font-medium mb-2">Sprache</label>
+            <label className="block text-sm font-medium mb-2">{t('settings.language')}</label>
             <select 
               value={language}
               onChange={handleLanguageChange}
               className="w-full p-2 rounded bg-white dark:bg-[#1C1C1C] border border-gray-300 dark:border-gray-700 focus:border-[#67329E] focus:outline-none"
             >
-              {languages.map(lang => (
+              {Object.values(languages).map(lang => (
                 <option key={lang.code} value={lang.code}>{lang.name}</option>
               ))}
             </select>
@@ -230,23 +216,23 @@ function Settings() {
       <div className="bg-gray-100 dark:bg-[#242424] p-6 rounded-lg">
         <div className="flex items-center mb-4">
           <BellAlertIcon className="h-6 w-6 mr-2" />
-          <h2 className="text-xl font-bold">Benachrichtigungen</h2>
+          <h2 className="text-xl font-bold">{t('settings.notifications')}</h2>
         </div>
         
         {loading ? (
-          <div className="py-4 text-center">Lade Einstellungen...</div>
+          <div className="py-4 text-center">{t('app.loading')}</div>
         ) : (
           <div className="space-y-6">
             {/* Email Notifications */}
             <div className="border-b border-gray-300 dark:border-gray-700 pb-4">
               <div className="flex items-center mb-3">
                 <EnvelopeIcon className="h-5 w-5 mr-2" />
-                <h3 className="text-lg font-medium">Email-Benachrichtigungen</h3>
+                <h3 className="text-lg font-medium">{t('settings.emailNotifications')}</h3>
               </div>
               
               <div className="space-y-4 pl-7">
                 <div className="flex items-center justify-between">
-                  <span>Email-Benachrichtigungen aktivieren</span>
+                  <span>{t('settings.enable')}</span>
                   <label className="relative inline-flex items-center cursor-pointer">
                     <input 
                       type="checkbox" 
@@ -261,7 +247,7 @@ function Settings() {
                 {emailEnabled && (
                   <>
                     <div className="flex items-center justify-between pl-4">
-                      <span>Fällige Aufgaben</span>
+                      <span>{t('settings.dueTasks')}</span>
                       <label className="relative inline-flex items-center cursor-pointer">
                         <input 
                           type="checkbox" 
@@ -274,7 +260,7 @@ function Settings() {
                     </div>
                     
                     <div className="flex items-center justify-between pl-4">
-                      <span>Neue Funktionen</span>
+                      <span>{t('settings.newFeatures')}</span>
                       <label className="relative inline-flex items-center cursor-pointer">
                         <input 
                           type="checkbox" 
@@ -294,12 +280,12 @@ function Settings() {
             <div>
               <div className="flex items-center mb-3">
                 <ComputerDesktopIcon className="h-5 w-5 mr-2" />
-                <h3 className="text-lg font-medium">Desktop-Benachrichtigungen</h3>
+                <h3 className="text-lg font-medium">{t('settings.desktopNotifications')}</h3>
               </div>
               
               <div className="space-y-4 pl-7">
                 <div className="flex items-center justify-between">
-                  <span>Desktop-Benachrichtigungen aktivieren</span>
+                  <span>{t('settings.enable')}</span>
                   <label className="relative inline-flex items-center cursor-pointer">
                     <input 
                       type="checkbox" 
@@ -314,7 +300,7 @@ function Settings() {
                 {desktopEnabled && (
                   <>
                     <div className="flex items-center justify-between pl-4">
-                      <span>Fällige Aufgaben</span>
+                      <span>{t('settings.dueTasks')}</span>
                       <label className="relative inline-flex items-center cursor-pointer">
                         <input 
                           type="checkbox" 
@@ -344,13 +330,13 @@ function Settings() {
                 style={{ backgroundColor: 'var(--theme-color)' }}
                 disabled={loading}
               >
-                Benachrichtigungseinstellungen speichern
+                {t('settings.saveNotifications')}
               </button>
               
               {saved && (
                 <div className="mt-3 flex items-center text-green-600 dark:text-green-400">
                   <CheckIcon className="h-5 w-5 mr-1" />
-                  <span>Einstellungen gespeichert</span>
+                  <span>{t('settings.settingsSaved')}</span>
                 </div>
               )}
               
@@ -375,17 +361,17 @@ function Settings() {
       <div className="bg-gray-100 dark:bg-[#242424] p-6 rounded-lg">
         <div className="flex items-center mb-4">
           <TrashIcon className="h-6 w-6 mr-2 text-red-500" />
-          <h2 className="text-xl font-bold text-red-500">Gefahrenzone</h2>
+          <h2 className="text-xl font-bold text-red-500">{t('settings.dangerZone')}</h2>
         </div>
         <p className="mb-4 text-gray-600 dark:text-gray-400">
-          Wenn du deinen Account löschst, werden alle deine Daten permanent gelöscht. Diese Aktion kann nicht rückgängig gemacht werden.
+          {t('settings.deleteWarning')}
         </p>
         <button 
           className="bg-red-600 px-4 py-2 rounded-lg hover:bg-red-700 transition-colors text-white flex items-center"
           onClick={handleDeleteAccountClick}
         >
           <TrashIcon className="h-5 w-5 mr-2" />
-          Account löschen
+          {t('settings.deleteAccount')}
         </button>
         
         {/* Account löschen Dialog */}
@@ -402,7 +388,7 @@ function Settings() {
         >
           <DialogTitle sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <TrashIcon className="h-6 w-6 text-red-500" />
-            Account löschen
+            {t('settings.deleteAccount')}
           </DialogTitle>
           <DialogContent>
             {deleteError && (
@@ -415,14 +401,14 @@ function Settings() {
               </Alert>
             )}
             <p className="mb-4">
-              Bitte bestätige die Löschung deines Accounts, indem du dein Passwort eingibst.
+              {t('settings.confirmDelete')}
               <br /><br />
-              <strong>Achtung:</strong> Diese Aktion kann nicht rückgängig gemacht werden!
+              <strong>{t('settings.attention')}</strong>
             </p>
             <TextField
               autoFocus
               margin="dense"
-              label="Passwort"
+              label={t('settings.enterPassword')}
               type="password"
               fullWidth
               variant="outlined"
@@ -449,7 +435,7 @@ function Settings() {
               color="primary"
               startIcon={<XCircleIcon className="h-5 w-5" />}
             >
-              Abbrechen
+              {t('app.cancel')}
             </Button>
             <Button 
               onClick={handleDeleteConfirm} 
@@ -458,7 +444,7 @@ function Settings() {
               disabled={isDeleting}
               startIcon={isDeleting ? <CircularProgress size={20} /> : <TrashIcon className="h-5 w-5" />}
             >
-              {isDeleting ? 'Wird gelöscht...' : 'Account löschen'}
+              {isDeleting ? t('settings.deleting') : t('settings.deleteAccount')}
             </Button>
           </DialogActions>
         </Dialog>

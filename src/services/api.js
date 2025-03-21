@@ -42,6 +42,11 @@ export const updateProfileImage = async (profileImage) => {
   return response.data;
 };
 
+export const updateUserProfile = async (profileData) => {
+  const response = await api.put('/auth/update-profile', profileData);
+  return response.data;
+};
+
 export const changePassword = async (currentPassword, newPassword, confirmPassword) => {
   const response = await api.put('/auth/change-password', { 
     currentPassword, 

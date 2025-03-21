@@ -8,6 +8,7 @@ function TodoList() {
   const [showInput, setShowInput] = useState(false)
   const [dueDate, setDueDate] = useState('')
   const [category, setCategory] = useState('default')
+  const [priority, setPriority] = useState('medium')
 
   const handleAddTodo = (e) => {
     e.preventDefault()
@@ -20,11 +21,13 @@ function TodoList() {
       title: newTodo,
       dueDate: dueDate || undefined,
       category: category,
-      color: selectedCategory?.color
+      color: selectedCategory?.color,
+      priority: priority
     })
     setNewTodo('')
     setDueDate('')
     setCategory('default')
+    setPriority('medium')
     setShowInput(false)
   }
 
@@ -42,6 +45,20 @@ function TodoList() {
   const getCategoryName = (categoryId) => {
     const category = categories.find(cat => cat.id === categoryId)
     return category ? category.name : 'Allgemein'
+  }
+
+  // Farbe und Text für die Priorität
+  const getPriorityDisplay = (priority) => {
+    switch(priority) {
+      case 'high':
+        return { color: '#ef4444', text: 'Hoch' };
+      case 'medium':
+        return { color: '#f97316', text: 'Mittel' };
+      case 'low':
+        return { color: '#22c55e', text: 'Niedrig' };
+      default:
+        return { color: '#f97316', text: 'Mittel' };
+    }
   }
 
   return (
@@ -90,6 +107,18 @@ function TodoList() {
                         }}
                       >
                         {getCategoryName(todo.category)}
+                      </span>
+                    )}
+                    
+                    {todo.priority && (
+                      <span 
+                        className="text-xs px-2 py-1 rounded-full"
+                        style={{ 
+                          backgroundColor: `${getPriorityDisplay(todo.priority).color}22`,
+                          color: getPriorityDisplay(todo.priority).color
+                        }}
+                      >
+                        {getPriorityDisplay(todo.priority).text}
                       </span>
                     )}
                     
@@ -152,6 +181,19 @@ function TodoList() {
               </select>
             </div>
             
+            <div>
+              <label className="block text-sm text-gray-700 dark:text-gray-300 mb-1">Priorität</label>
+              <select
+                value={priority}
+                onChange={(e) => setPriority(e.target.value)}
+                className="w-full p-2 rounded bg-white dark:bg-[#1C1C1C] border border-gray-300 dark:border-gray-700 focus:border-[#67329E] focus:outline-none"
+              >
+                <option value="low">Niedrig</option>
+                <option value="medium">Mittel</option>
+                <option value="high">Hoch</option>
+              </select>
+            </div>
+            
             <div className="flex gap-2">
               <button 
                 type="submit"
@@ -182,4 +224,4 @@ function TodoList() {
   )
 }
 
-export default TodoList 
+export default TodoList

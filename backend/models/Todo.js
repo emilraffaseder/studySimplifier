@@ -20,6 +20,11 @@ const todoSchema = new mongoose.Schema({
     type: String,
     default: '#67329E' // Default violet color
   },
+  priority: {
+    type: String,
+    enum: ['low', 'medium', 'high'],
+    default: 'medium'
+  },
   user: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',

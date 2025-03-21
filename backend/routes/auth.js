@@ -112,15 +112,16 @@ router.put('/profile-image', auth, async (req, res) => {
   try {
     const { profileImage } = req.body;
     
-    if (!profileImage) {
-      return res.status(400).json({ msg: 'Profilbild URL ist erforderlich' });
-    }
+    // Entfernen der Validierung, die eine Profilbild-URL erfordert
+    // if (!profileImage) {
+    //   return res.status(400).json({ msg: 'Profilbild URL ist erforderlich' });
+    // }
 
     console.log('Profilbild Update für Benutzer:', req.user.id);
-    console.log('Profilbild Länge:', profileImage.length, 'Zeichen');
+    console.log('Profilbild Wert:', profileImage ? 'Vorhanden' : 'Leer');
     
     // Sicherstellung, dass es keine zu großen Bilder gibt
-    if (profileImage.length > 2000000) { // Ungefähr 2MB
+    if (profileImage && profileImage.length > 2000000) { // Ungefähr 2MB
       return res.status(400).json({ 
         msg: 'Profilbild ist zu groß. Maximum ist 2MB.' 
       });
@@ -131,7 +132,7 @@ router.put('/profile-image', auth, async (req, res) => {
       return res.status(404).json({ msg: 'Benutzer nicht gefunden' });
     }
 
-    user.profileImage = profileImage;
+    user.profileImage = profileImage || ''; // Leere Zeichenkette wenn keine URL vorhanden
     await user.save();
 
     res.json({ 
@@ -142,6 +143,62 @@ router.put('/profile-image', auth, async (req, res) => {
     console.error('Update profile image error:', err);
     res.status(500).json({ 
       msg: 'Fehler beim Aktualisieren des Profilbilds', 
+      error: err.message 
+    });
+  }
+});
+
+// Benutzerprofile aktualisieren
+router.put('/update-profile', auth, async (req, res) => {
+  try {
+    const { firstName, lastName, email, password } = req.body;
+    
+    if (!firstName || !lastName || !email || !password) {
+      return res.status(400).json({ msg: 'Bitte alle Felder ausfüllen' });
+    }
+    
+    // Benutzer finden
+    const user = await User.findById(req.user.id);
+    if (!user) {
+      return res.status(404).json({ msg: 'Benutzer nicht gefunden' });
+    }
+    
+    // Passwort überprüfen
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      return res.status(400).json({ msg: 'Passwort ist nicht korrekt' });
+    }
+    
+    // Überprüfen, ob die neue E-Mail bereits von einem anderen Benutzer verwendet wird
+    if (email !== user.email) {
+      const existingUser = await User.findOne({ email });
+      if (existingUser) {
+        return res.status(400).json({ msg: 'Ein Benutzer mit dieser E-Mail existiert bereits' });
+      }
+    }
+    
+    // Profil aktualisieren
+    user.firstName = firstName;
+    user.lastName = lastName;
+    user.email = email;
+    
+    await user.save();
+    
+    res.json({ 
+      success: true, 
+      msg: 'Profil erfolgreich aktualisiert',
+      user: {
+        id: user.id,
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        profileImage: user.profileImage
+      }
+    });
+  } catch (err) {
+    console.error('Update profile error:', err);
+    res.status(500).json({ 
+      msg: 'Fehler beim Aktualisieren des Profils', 
       error: err.message 
     });
   }

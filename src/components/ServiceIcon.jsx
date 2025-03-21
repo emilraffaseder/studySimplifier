@@ -1,3 +1,5 @@
+import LogoStudySimplifier from './LogoStudySimplifier'
+
 function ServiceIcon({ service }) {
   const iconMap = {
     moodle: '/icons/moodle.png',

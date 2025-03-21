@@ -9,10 +9,7 @@ export function TodoProvider({ children }) {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
   const [categories, setCategories] = useState([
-    { id: 'default', name: 'Allgemein', color: '#67329E' },
-    { id: 'study', name: 'Studium', color: '#3b82f6' },
-    { id: 'work', name: 'Arbeit', color: '#22c55e' },
-    { id: 'personal', name: 'Persönlich', color: '#f97316' }
+    { id: 'default', name: 'Allgemein', color: '#67329E' }
   ])
   const { isLoggedIn } = useAuth()
 
@@ -138,10 +135,9 @@ export function TodoProvider({ children }) {
   }
 
   const deleteCategory = (id) => {
-    // Prüfe, ob es sich um eine Standard-Kategorie handelt
-    const isDefaultCategory = ['default', 'study', 'work', 'personal'].includes(id)
-    if (isDefaultCategory) {
-      setError('Standard-Kategorien können nicht gelöscht werden')
+    // Prüfe, ob es sich um die "default" Kategorie handelt
+    if (id === 'default') {
+      setError('Die Kategorie "Allgemein" kann nicht gelöscht werden')
       return false
     }
     

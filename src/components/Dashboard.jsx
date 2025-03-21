@@ -2,18 +2,19 @@ import ServiceCard from './ServiceCard'
 import TodoList from './TodoList'
 import { useLinks } from '../context/LinksContext'
 import { useAuth } from '../context/AuthContext'
-import { TrashIcon, PencilSquareIcon, CheckIcon } from '@heroicons/react/24/outline'
+import { useLanguage } from '../context/LanguageContext'
+import { TrashIcon, PencilSquareIcon, CheckIcon, ArrowUpIcon, ArrowDownIcon } from '@heroicons/react/24/outline'
 import { useState, useEffect } from 'react'
-import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd'
 
 function Dashboard() {
   const { links, deleteLink } = useLinks()
   const { isLoggedIn, user } = useAuth()
+  const { t } = useLanguage()
   const [isEditMode, setIsEditMode] = useState(false)
   const [layout, setLayout] = useState([
-    { id: 'services', title: 'Services' },
-    { id: 'todos', title: 'Aufgaben' },
-    { id: 'links', title: 'Persönliche Links' }
+    { id: 'services', title: t('dashboard.services') },
+    { id: 'todos', title: t('dashboard.tasks') },
+    { id: 'links', title: t('dashboard.personalLinks') }
   ])
 
   // Laden des Layouts aus dem localStorage
@@ -37,14 +38,28 @@ function Dashboard() {
     }
   }, [layout, isLoggedIn, user])
 
-  const handleDragEnd = (result) => {
-    if (!result.destination) return
+  // Verschieben eines Abschnitts nach oben
+  const moveUp = (index) => {
+    if (index <= 0) return
+    
+    const newLayout = [...layout]
+    const temp = newLayout[index]
+    newLayout[index] = newLayout[index - 1]
+    newLayout[index - 1] = temp
+    
+    setLayout(newLayout)
+  }
 
-    const items = Array.from(layout)
-    const [reorderedItem] = items.splice(result.source.index, 1)
-    items.splice(result.destination.index, 0, reorderedItem)
-
-    setLayout(items)
+  // Verschieben eines Abschnitts nach unten
+  const moveDown = (index) => {
+    if (index >= layout.length - 1) return
+    
+    const newLayout = [...layout]
+    const temp = newLayout[index]
+    newLayout[index] = newLayout[index + 1]
+    newLayout[index + 1] = temp
+    
+    setLayout(newLayout)
   }
 
   // Rendering der verschiedenen Abschnitte basierend auf ihrer ID
@@ -53,7 +68,7 @@ function Dashboard() {
       case 'services':
         return (
           <div className="mb-6">
-            <h2 className="text-xl font-bold mb-4">Services</h2>
+            <h2 className="text-xl font-bold mb-4">{t('dashboard.services')}</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
               <ServiceCard title="Moodle" service="moodle" url="https://moodle.spengergasse.at" />
               <ServiceCard title="Teams" service="teams" url="https://teams.microsoft.com" />
@@ -65,19 +80,19 @@ function Dashboard() {
       case 'todos':
         return isLoggedIn ? (
           <div className="mb-6">
-            <h2 className="text-xl font-bold mb-4">Aufgaben</h2>
+            <h2 className="text-xl font-bold mb-4">{t('dashboard.tasks')}</h2>
             <TodoList />
           </div>
         ) : (
           <div className="mb-6">
-            <h2 className="text-xl font-bold mb-4">Aufgaben</h2>
+            <h2 className="text-xl font-bold mb-4">{t('dashboard.tasks')}</h2>
             <div className="bg-gray-100 dark:bg-[#242424] p-6 rounded-lg flex flex-col items-center justify-center">
-              <h3 className="text-xl font-medium mb-2">TODO-Liste</h3>
+              <h3 className="text-xl font-medium mb-2">{t('todo.title')}</h3>
               <p className="text-center text-gray-400 mb-4">
-                Bitte melden Sie sich an, um die TODO-Liste zu nutzen.
+                {t('dashboard.pleaseLogin')}
               </p>
               <div className="px-4 py-2 rounded text-white" style={{ backgroundColor: 'var(--theme-color)' }}>
-                Anmeldung erforderlich
+                {t('dashboard.loginRequired')}
               </div>
             </div>
           </div>
@@ -85,7 +100,7 @@ function Dashboard() {
       case 'links':
         return isLoggedIn ? (
           <div className="mb-6">
-            <h2 className="text-xl font-bold mb-4">Deine persönlichen Links</h2>
+            <h2 className="text-xl font-bold mb-4">{t('dashboard.personalLinks')}</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {links.length > 0 ? (
                 links.map(link => (
@@ -133,22 +148,22 @@ function Dashboard() {
                 ))
               ) : (
                 <div className="col-span-2 text-center text-gray-500 dark:text-gray-400 py-8">
-                  Keine persönlichen Links vorhanden. 
-                  Füge welche hinzu über den "Links hinzufügen" Button!
+                  {t('dashboard.noLinks')} 
+                  {t('dashboard.addLinksHint')}
                 </div>
               )}
             </div>
           </div>
         ) : (
           <div className="mb-6">
-            <h2 className="text-xl font-bold mb-4">Persönliche Links</h2>
+            <h2 className="text-xl font-bold mb-4">{t('dashboard.personalLinks')}</h2>
             <div className="bg-gray-100 dark:bg-[#242424] p-6 rounded-lg flex flex-col items-center justify-center">
-              <h3 className="text-xl font-medium mb-2">Persönliche Links</h3>
+              <h3 className="text-xl font-medium mb-2">{t('dashboard.personalLinks')}</h3>
               <p className="text-center text-gray-400 mb-4">
-                Bitte melden Sie sich an, um Ihre persönliche Link-Sammlung zu nutzen.
+                {t('dashboard.pleaseLogin')}
               </p>
               <div className="px-4 py-2 rounded text-white" style={{ backgroundColor: 'var(--theme-color)' }}>
-                Anmeldung erforderlich
+                {t('dashboard.loginRequired')}
               </div>
             </div>
           </div>
@@ -169,7 +184,7 @@ function Dashboard() {
               style={{ backgroundColor: 'var(--theme-color)' }}
             >
               <CheckIcon className="h-5 w-5" />
-              Fertig
+              {t('dashboard.done')}
             </button>
           ) : (
             <button
@@ -178,55 +193,43 @@ function Dashboard() {
               style={{ backgroundColor: 'var(--theme-color)' }}
             >
               <PencilSquareIcon className="h-5 w-5" />
-              Dashboard anpassen
+              {t('dashboard.editDashboard')}
             </button>
           )}
         </div>
       )}
 
       {isLoggedIn && isEditMode ? (
-        <DragDropContext onDragEnd={handleDragEnd}>
-          <Droppable droppableId="dashboard">
-            {(provided) => (
-              <div
-                {...provided.droppableProps}
-                ref={provided.innerRef}
-                className="space-y-4 px-4 py-2 max-w-7xl mx-auto w-full"
-              >
-                {layout.map((section, index) => (
-                  <Draggable key={section.id} draggableId={section.id} index={index}>
-                    {(provided, snapshot) => (
-                      <div
-                        ref={provided.innerRef}
-                        {...provided.draggableProps}
-                        className={`rounded-lg ${snapshot.isDragging ? 'opacity-70' : ''}`}
-                      >
-                        <div className="bg-gray-100 dark:bg-[#343434] rounded-lg overflow-hidden shadow-md">
-                          <div 
-                            {...provided.dragHandleProps}
-                            className="py-2 px-4 bg-gray-200 dark:bg-[#242424] flex items-center justify-between cursor-move"
-                          >
-                            <span className="text-sm font-medium">{section.title}</span>
-                            <span className="text-gray-500 text-xs flex items-center">
-                              <svg className="h-4 w-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
-                              </svg>
-                              Zum Verschieben ziehen
-                            </span>
-                          </div>
-                          <div className="p-4">
-                            {renderSection(section)}
-                          </div>
-                        </div>
-                      </div>
-                    )}
-                  </Draggable>
-                ))}
-                {provided.placeholder}
+        <div className="space-y-4 px-4 py-2 max-w-7xl mx-auto w-full">
+          {layout.map((section, index) => (
+            <div key={section.id} className="bg-gray-100 dark:bg-[#343434] rounded-lg overflow-hidden shadow-md">
+              <div className="py-2 px-4 bg-gray-200 dark:bg-[#242424] flex items-center justify-between">
+                <span className="text-sm font-medium">{section.title}</span>
+                <div className="flex items-center space-x-2">
+                  <button
+                    onClick={() => moveUp(index)}
+                    disabled={index === 0}
+                    className={`p-1 rounded ${index === 0 ? 'text-gray-400 cursor-not-allowed' : 'text-gray-600 hover:bg-gray-300 dark:hover:bg-gray-600'}`}
+                    title={t('dashboard.moveUp')}
+                  >
+                    <ArrowUpIcon className="h-4 w-4" />
+                  </button>
+                  <button
+                    onClick={() => moveDown(index)}
+                    disabled={index === layout.length - 1}
+                    className={`p-1 rounded ${index === layout.length - 1 ? 'text-gray-400 cursor-not-allowed' : 'text-gray-600 hover:bg-gray-300 dark:hover:bg-gray-600'}`}
+                    title={t('dashboard.moveDown')}
+                  >
+                    <ArrowDownIcon className="h-4 w-4" />
+                  </button>
+                </div>
               </div>
-            )}
-          </Droppable>
-        </DragDropContext>
+              <div className="p-4">
+                {renderSection(section)}
+              </div>
+            </div>
+          ))}
+        </div>
       ) : (
         <div className="flex flex-col space-y-6 px-4 py-2 max-w-7xl mx-auto w-full">
           {isLoggedIn ? (
@@ -239,7 +242,7 @@ function Dashboard() {
             <>
               {/* Hauptdienste Reihe für nicht eingeloggte Benutzer */}
               <div className="bg-gray-100 dark:bg-[#242424] p-6 rounded-lg shadow-md">
-                <h2 className="text-xl font-bold mb-4">Services</h2>
+                <h2 className="text-xl font-bold mb-4">{t('dashboard.services')}</h2>
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
                   <ServiceCard title="Moodle" service="moodle" url="https://moodle.spengergasse.at" />
                   <ServiceCard title="Teams" service="teams" url="https://teams.microsoft.com" />
@@ -252,24 +255,24 @@ function Dashboard() {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div>
                   <div className="bg-gray-100 dark:bg-[#242424] p-6 rounded-lg flex flex-col items-center justify-center h-full shadow-md">
-                    <h3 className="text-xl font-medium mb-2">TODO-Liste</h3>
+                    <h3 className="text-xl font-medium mb-2">{t('todo.title')}</h3>
                     <p className="text-center text-gray-400 mb-4">
-                      Bitte melden Sie sich an, um die TODO-Liste zu nutzen.
+                      {t('dashboard.pleaseLogin')}
                     </p>
                     <div className="px-4 py-2 rounded text-white" style={{ backgroundColor: 'var(--theme-color)' }}>
-                      Anmeldung erforderlich
+                      {t('dashboard.loginRequired')}
                     </div>
                   </div>
                 </div>
                 
                 <div className="md:col-span-2">
                   <div className="bg-gray-100 dark:bg-[#242424] p-6 rounded-lg flex flex-col items-center justify-center h-full shadow-md">
-                    <h3 className="text-xl font-medium mb-2">Persönliche Links</h3>
+                    <h3 className="text-xl font-medium mb-2">{t('dashboard.personalLinks')}</h3>
                     <p className="text-center text-gray-400 mb-4">
-                      Bitte melden Sie sich an, um Ihre persönliche Link-Sammlung zu nutzen.
+                      {t('dashboard.pleaseLogin')}
                     </p>
                     <div className="px-4 py-2 rounded text-white" style={{ backgroundColor: 'var(--theme-color)' }}>
-                      Anmeldung erforderlich
+                      {t('dashboard.loginRequired')}
                     </div>
                   </div>
                 </div>
