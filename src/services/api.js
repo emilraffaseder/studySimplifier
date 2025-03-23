@@ -132,21 +132,4 @@ export const testDesktopNotification = async (password) => {
   return response.data;
 };
 
-// Email verification
-export const verifyEmail = async (email, code) => {
-  const response = await api.post('/auth/verify-email', { email, code });
-  return response.data;
-};
-
-export const resendVerificationCode = async (email) => {
-  const response = await api.post('/auth/resend-verification', { email });
-  return response.data;
-};
-
-// Admin functions
-export const resetDatabase = async (adminPassword) => {
-  const response = await api.post('/admin/reset-database', { adminPassword });
-  return response.data;
-};
-
 export default api; 

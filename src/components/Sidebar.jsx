@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom'
-import { HomeIcon, UserIcon, Cog6ToothIcon, CalendarIcon, Bars3Icon, XMarkIcon, ShieldCheckIcon } from '@heroicons/react/24/outline'
+import { HomeIcon, UserIcon, Cog6ToothIcon, CalendarIcon, Bars3Icon, XMarkIcon } from '@heroicons/react/24/outline'
 import { useAuth } from '../context/AuthContext'
 import { useTheme } from '../context/ThemeContext'
 import { useState, useEffect } from 'react'
@@ -22,8 +22,6 @@ function Sidebar() {
       setPageTitle('Account')
     } else if (location.pathname === '/settings') {
       setPageTitle('Einstellungen')
-    } else if (location.pathname === '/admin') {
-      setPageTitle('Admin-Panel')
     }
   }, [location.pathname])
 
@@ -54,13 +52,7 @@ function Sidebar() {
         name: 'Einstellungen',
         icon: <Cog6ToothIcon className="h-5 w-5 mr-3" />
       }
-    ] : []),
-    // Admin-Link (immer sichtbar für einfachen Zugang in der Demo)
-    {
-      path: '/admin',
-      name: 'Admin-Panel',
-      icon: <ShieldCheckIcon className="h-5 w-5 mr-3" />
-    }
+    ] : [])
   ]
 
   const sidebarBgClass = theme === 'light' ? 'bg-gray-100' : 'bg-[#242424]'

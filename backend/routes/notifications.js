@@ -174,7 +174,7 @@ Dein Study Simplifier Team`,
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
           <div style="background-color: #67329E; color: white; padding: 20px; text-align: center;">
-            <img src="cid:logo" alt="Study Simplifier Logo" style="max-width: 150px; margin-bottom: 10px;">
+            <img src="http://localhost:3000/icons/LogoStudySimplifier.png" alt="Study Simplifier Logo" style="width: 60px; height: 60px; margin-bottom: 10px;" />
             <h1>Test Benachrichtigung</h1>
           </div>
           <div style="padding: 20px; border: 1px solid #ddd; border-top: none;">
@@ -183,14 +183,7 @@ Dein Study Simplifier Team`,
             <p>Viele Grüße,<br>Dein Study Simplifier Team</p>
           </div>
         </div>
-      `,
-      attachments: [
-        {
-          filename: 'logo.png',
-          path: '../public/icons/LogoStudySimplifier.png',
-          cid: 'logo'
-        }
-      ]
+      `
     });
     
     res.json({ success: true, message: 'Test-Email wurde gesendet' });

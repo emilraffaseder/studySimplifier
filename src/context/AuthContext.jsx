@@ -61,31 +61,13 @@ export const AuthProvider = ({ children }) => {
   const register = async (firstName, lastName, email, password, confirmPassword) => {
     try {
       const data = await api.register(firstName, lastName, email, password, confirmPassword);
-      if (data.token) {
-        localStorage.setItem('token', data.token);
-        setToken(data.token);
-        setUser(data.user);
-        setIsLoggedIn(true);
-      }
+      localStorage.setItem('token', data.token);
+      setToken(data.token);
+      setUser(data.user);
+      setIsLoggedIn(true);
       return data;
     } catch (error) {
       console.error('Registrierung fehlgeschlagen:', error);
-      throw error;
-    }
-  };
-
-  const verifyEmail = async (email, code) => {
-    try {
-      const data = await api.verifyEmail(email, code);
-      if (data.token) {
-        localStorage.setItem('token', data.token);
-        setToken(data.token);
-        setUser(data.user);
-        setIsLoggedIn(true);
-      }
-      return data;
-    } catch (error) {
-      console.error('E-Mail-Verifizierung fehlgeschlagen:', error);
       throw error;
     }
   };
@@ -169,8 +151,7 @@ export const AuthProvider = ({ children }) => {
         updateProfileImage,
         updateUserProfile,
         changePassword,
-        deleteAccount,
-        verifyEmail
+        deleteAccount
       }}
     >
       {children}

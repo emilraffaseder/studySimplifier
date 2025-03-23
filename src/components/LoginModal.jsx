@@ -1,10 +1,8 @@
 import { XMarkIcon } from '@heroicons/react/24/outline'
 import { useState } from 'react'
 import { useAuth } from '../context/AuthContext'
-import { useNavigate } from 'react-router-dom'
 
 function LoginModal({ onClose }) {
-  const navigate = useNavigate()
   const [isRegistering, setIsRegistering] = useState(false)
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -13,7 +11,6 @@ function LoginModal({ onClose }) {
   const [confirmPassword, setConfirmPassword] = useState('')
   const [error, setError] = useState('')
   const [isLoading, setIsLoading] = useState(false)
-  const [registrationSuccess, setRegistrationSuccess] = useState(false)
   const { login, register } = useAuth()
 
   const handleSubmit = async (e) => {
@@ -29,40 +26,11 @@ function LoginModal({ onClose }) {
           return
         }
 
-        try {
-          const response = await register(firstName, lastName, email, password, confirmPassword)
-          // Wenn die Registrierung erfolgreich war, aber keine Token zurückgegeben wird,
-          // dann ist eine E-Mail-Bestätigung erforderlich
-          if (response.success && !response.token) {
-            setRegistrationSuccess(true)
-            setTimeout(() => {
-              onClose()
-              navigate('/verify-email', { state: { email } })
-            }, 1500)
-          } else {
-            onClose()
-          }
-        } catch (err) {
-          if (err.response?.data?.needsVerification) {
-            onClose()
-            navigate('/verify-email', { state: { email: err.response.data.email } })
-          } else {
-            throw err
-          }
-        }
+        await register(firstName, lastName, email, password, confirmPassword)
+        onClose()
       } else {
-        try {
-          await login(email, password)
-          onClose()
-        } catch (err) {
-          // Wenn der Login fehlschlägt, weil eine E-Mail-Bestätigung erforderlich ist
-          if (err.response?.data?.needsVerification) {
-            onClose()
-            navigate('/verify-email', { state: { email: err.response.data.email } })
-          } else {
-            throw err
-          }
-        }
+        await login(email, password)
+        onClose()
       }
     } catch (err) {
       console.error('Login-Fehler:', err)
@@ -76,20 +44,6 @@ function LoginModal({ onClose }) {
     } finally {
       setIsLoading(false)
     }
-  }
-
-  if (registrationSuccess) {
-    return (
-      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-        <div className="bg-[#242424] p-8 rounded-lg w-96 relative">
-          <div className="text-center py-6">
-            <h2 className="text-2xl font-bold mb-4">Registrierung erfolgreich!</h2>
-            <p>Bitte überprüfe deine E-Mails für den Bestätigungscode.</p>
-            <p className="mt-4 text-sm text-gray-400">Du wirst weitergeleitet...</p>
-          </div>
-        </div>
-      </div>
-    )
   }
 
   return (
