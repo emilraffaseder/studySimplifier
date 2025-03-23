@@ -17,6 +17,8 @@ import FeedbackModal from './components/FeedbackModal'
 import AddLinkButton from './components/AddLinkButton'
 import LoginModal from './components/LoginModal'
 import NotFoundPage from './components/NotFoundPage'
+import EmailVerification from './components/EmailVerification'
+import AdminPanel from './components/AdminPanel'
 
 function PageTitle() {
   const location = useLocation()
@@ -34,6 +36,10 @@ function PageTitle() {
       setTitle(t('nav.account'))
     } else if (location.pathname === '/settings') {
       setTitle(t('nav.settings'))
+    } else if (location.pathname === '/verify-email') {
+      setTitle('E-Mail bestätigen')
+    } else if (location.pathname === '/admin') {
+      setTitle('Admin-Panel')
     }
   }, [location.pathname, t])
 
@@ -122,6 +128,7 @@ function AppContent() {
         <Routes>
           <Route path="/" element={<Dashboard />} />
           <Route path="/login" element={<LoginPage />} />
+          <Route path="/verify-email" element={<EmailVerification />} />
           <Route
             path="/tasks"
             element={isLoggedIn ? <TasksPage /> : <Navigate to="/login" />}
@@ -134,6 +141,7 @@ function AppContent() {
             path="/settings"
             element={isLoggedIn ? <Settings /> : <Navigate to="/login" />}
           />
+          <Route path="/admin" element={<AdminPanel />} />
           <Route path="*" element={<NotFoundPage />} />
         </Routes>
       </main>

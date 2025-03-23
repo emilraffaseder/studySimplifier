@@ -11,7 +11,9 @@ import {
   CheckIcon, 
   ExclamationCircleIcon,
   TrashIcon,
-  XCircleIcon
+  XCircleIcon,
+  InformationCircleIcon,
+  LockClosedIcon
 } from '@heroicons/react/24/outline'
 import Dialog from '@mui/material/Dialog'
 import DialogTitle from '@mui/material/DialogTitle'
@@ -31,7 +33,9 @@ function Settings() {
     loading, 
     error,
     updateSettings,
-    requestDesktopPermission
+    requestDesktopPermission,
+    sendTestEmailNotification,
+    sendTestDesktopNotification
   } = useNotifications()
   const { user, deleteAccount } = useAuth()
   const { language, languages, changeLanguage, t } = useLanguage()
@@ -64,6 +68,13 @@ function Settings() {
   const [emailNewFeatures, setEmailNewFeatures] = useState(true)
   const [desktopEnabled, setDesktopEnabled] = useState(false)
   const [desktopDueTasks, setDesktopDueTasks] = useState(true)
+
+  // Benachrichtigungen testen
+  const [testPassword, setTestPassword] = useState('')
+  const [testingEmail, setTestingEmail] = useState(false)
+  const [testingDesktop, setTestingDesktop] = useState(false)
+  const [testError, setTestError] = useState(null)
+  const [testSuccess, setTestSuccess] = useState(null)
 
   // Update local state when settings are loaded
   useEffect(() => {
@@ -117,6 +128,57 @@ function Settings() {
       setTimeout(() => setSaved(false), 3000)
     } else {
       setSaveError(t('settings.settingsError'))
+    }
+  }
+  
+  // Test Benachrichtigungen
+  const handleTestEmailNotification = async () => {
+    if (!testPassword) {
+      setTestError('Bitte geben Sie Ihr Passwort ein')
+      return
+    }
+    
+    setTestError(null)
+    setTestSuccess(null)
+    setTestingEmail(true)
+    
+    try {
+      const result = await sendTestEmailNotification(testPassword)
+      if (result.success) {
+        setTestSuccess('Test-Email wurde gesendet')
+        setTimeout(() => setTestSuccess(null), 3000)
+      } else {
+        setTestError(result.error || 'Fehler beim Senden der Test-Email')
+      }
+    } catch (error) {
+      setTestError('Fehler beim Senden der Test-Email')
+    } finally {
+      setTestingEmail(false)
+    }
+  }
+  
+  const handleTestDesktopNotification = async () => {
+    if (!testPassword) {
+      setTestError('Bitte geben Sie Ihr Passwort ein')
+      return
+    }
+    
+    setTestError(null)
+    setTestSuccess(null)
+    setTestingDesktop(true)
+    
+    try {
+      const result = await sendTestDesktopNotification(testPassword)
+      if (result.success) {
+        setTestSuccess('Desktop-Benachrichtigung wurde angezeigt')
+        setTimeout(() => setTestSuccess(null), 3000)
+      } else {
+        setTestError(result.error || 'Fehler beim Anzeigen der Desktop-Benachrichtigung')
+      }
+    } catch (error) {
+      setTestError('Fehler beim Anzeigen der Desktop-Benachrichtigung')
+    } finally {
+      setTestingDesktop(false)
     }
   }
   
@@ -322,37 +384,116 @@ function Settings() {
               </div>
             </div>
 
-            {/* Save Button */}
-            <div className="pt-2">
-              <button 
-                onClick={handleSaveNotificationSettings}
-                className="px-6 py-2 rounded-lg text-white transition-colors flex items-center justify-center"
-                style={{ backgroundColor: 'var(--theme-color)' }}
-                disabled={loading}
-              >
-                {t('settings.saveNotifications')}
-              </button>
+            {/* Test Notifications Section */}
+            <div className="border-t border-gray-300 dark:border-gray-700 pt-4 mt-4">
+              <div className="flex items-center mb-3">
+                <InformationCircleIcon className="h-5 w-5 mr-2" />
+                <h3 className="text-lg font-medium">Benachrichtigungen testen</h3>
+              </div>
+              
+              <div className="space-y-4">
+                <div className="flex items-center">
+                  <LockClosedIcon className="h-5 w-5 mr-2 text-gray-500" />
+                  <div className="flex-1">
+                    <input
+                      type="password"
+                      placeholder="Passwort eingeben"
+                      value={testPassword}
+                      onChange={(e) => setTestPassword(e.target.value)}
+                      className="w-full p-2 rounded bg-white dark:bg-[#1C1C1C] border border-gray-300 dark:border-gray-700 focus:border-[#67329E] focus:outline-none"
+                    />
+                  </div>
+                </div>
+                
+                {testError && (
+                  <div className="text-red-500 text-sm">
+                    <ExclamationCircleIcon className="h-5 w-5 inline mr-1" />
+                    {testError}
+                  </div>
+                )}
+                
+                {testSuccess && (
+                  <div className="text-green-500 text-sm">
+                    <CheckIcon className="h-5 w-5 inline mr-1" />
+                    {testSuccess}
+                  </div>
+                )}
+                
+                <div className="flex space-x-2">
+                  <button
+                    onClick={handleTestEmailNotification}
+                    disabled={testingEmail || testingDesktop}
+                    className={`flex items-center px-4 py-2 rounded ${
+                      testingEmail 
+                        ? 'bg-gray-300 dark:bg-gray-700 cursor-not-allowed' 
+                        : 'bg-[#67329E] text-white hover:bg-[#532780]'
+                    }`}
+                  >
+                    {testingEmail ? (
+                      <>
+                        <CircularProgress size={16} className="mr-2" />
+                        Wird gesendet...
+                      </>
+                    ) : (
+                      <>
+                        <EnvelopeIcon className="h-5 w-5 mr-2" />
+                        Test E-Mail senden
+                      </>
+                    )}
+                  </button>
+                  
+                  <button
+                    onClick={handleTestDesktopNotification}
+                    disabled={testingDesktop || testingEmail}
+                    className={`flex items-center px-4 py-2 rounded ${
+                      testingDesktop 
+                        ? 'bg-gray-300 dark:bg-gray-700 cursor-not-allowed' 
+                        : 'bg-[#67329E] text-white hover:bg-[#532780]'
+                    }`}
+                  >
+                    {testingDesktop ? (
+                      <>
+                        <CircularProgress size={16} className="mr-2" />
+                        Wird angezeigt...
+                      </>
+                    ) : (
+                      <>
+                        <ComputerDesktopIcon className="h-5 w-5 mr-2" />
+                        Test Desktop-Benachrichtigung
+                      </>
+                    )}
+                  </button>
+                </div>
+                
+                <div className="text-sm text-gray-500 mt-2">
+                  <p>Mit diesen Buttons können Sie testen, ob Benachrichtigungen korrekt funktionieren.</p>
+                  <p>Bitte geben Sie Ihr Passwort ein, um unerwünschte Test-Benachrichtigungen zu vermeiden.</p>
+                </div>
+              </div>
+            </div>
+            
+            <div className="flex justify-end">
+              {saveError && (
+                <div className="text-red-500 mr-4 flex items-center">
+                  <ExclamationCircleIcon className="h-5 w-5 mr-1" />
+                  {saveError}
+                </div>
+              )}
               
               {saved && (
-                <div className="mt-3 flex items-center text-green-600 dark:text-green-400">
+                <div className="text-green-500 mr-4 flex items-center">
                   <CheckIcon className="h-5 w-5 mr-1" />
-                  <span>{t('settings.settingsSaved')}</span>
+                  {t('settings.saved')}
                 </div>
               )}
               
-              {saveError && (
-                <div className="mt-3 flex items-center text-red-600 dark:text-red-400">
-                  <ExclamationCircleIcon className="h-5 w-5 mr-1" />
-                  <span>{saveError}</span>
-                </div>
-              )}
-              
-              {error && (
-                <div className="mt-3 flex items-center text-red-600 dark:text-red-400">
-                  <ExclamationCircleIcon className="h-5 w-5 mr-1" />
-                  <span>{error}</span>
-                </div>
-              )}
+              <button
+                onClick={handleSaveNotificationSettings}
+                disabled={loading}
+                className="px-4 py-2 bg-[#67329E] text-white rounded hover:bg-[#532780]"
+              >
+                {loading ? t('app.saving') : t('settings.save')}
+              </button>
             </div>
           </div>
         )}

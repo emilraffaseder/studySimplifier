@@ -121,4 +121,32 @@ export const sendNewFeatureNotification = async (title, description) => {
   return response.data;
 };
 
+// Test notifications
+export const testEmailNotification = async (password) => {
+  const response = await api.post('/notifications/test-email', { password });
+  return response.data;
+};
+
+export const testDesktopNotification = async (password) => {
+  const response = await api.post('/notifications/test-desktop', { password });
+  return response.data;
+};
+
+// Email verification
+export const verifyEmail = async (email, code) => {
+  const response = await api.post('/auth/verify-email', { email, code });
+  return response.data;
+};
+
+export const resendVerificationCode = async (email) => {
+  const response = await api.post('/auth/resend-verification', { email });
+  return response.data;
+};
+
+// Admin functions
+export const resetDatabase = async (adminPassword) => {
+  const response = await api.post('/admin/reset-database', { adminPassword });
+  return response.data;
+};
+
 export default api; 

@@ -45,6 +45,7 @@ app.use('/api/auth', require('./routes/auth'))
 app.use('/api/links', require('./routes/links'))
 app.use('/api/todos', require('./routes/todos'))
 app.use('/api/notifications', require('./routes/notifications'))
+app.use('/api/admin', require('./routes/admin'))
 
 // Check for due tasks once when server starts
 const notificationService = require('./services/notificationService')

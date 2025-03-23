@@ -3,6 +3,8 @@ const bcrypt = require('bcryptjs')
 const jwt = require('jsonwebtoken')
 const User = require('../models/User')
 const auth = require('../middleware/auth')
+const emailService = require('../services/emailService')
+const crypto = require('crypto')
 
 // Login
 router.post('/login', async (req, res) => {
@@ -12,6 +14,15 @@ router.post('/login', async (req, res) => {
     const user = await User.findOne({ email })
     if (!user) {
       return res.status(400).json({ msg: 'Ungültige Anmeldedaten' })
+    }
+
+    // Check if user is verified
+    if (!user.verified) {
+      return res.status(400).json({ 
+        msg: 'Bitte bestätige zuerst deine E-Mail-Adresse',
+        needsVerification: true,
+        email: user.email
+      })
     }
 
     const isMatch = await bcrypt.compare(password, user.password)
@@ -51,32 +62,99 @@ router.post('/login', async (req, res) => {
 
 // Benutzer registrieren
 router.post('/register', async (req, res) => {
-  const { email, password, firstName, lastName, confirmPassword } = req.body
-
-  // Basic validation
-  if (!email || !password || !firstName || !lastName || !confirmPassword) {
-    return res.status(400).json({ msg: 'Bitte alle Felder ausfüllen' })
-  }
-
-  if (password !== confirmPassword) {
-    return res.status(400).json({ msg: 'Passwörter stimmen nicht überein' })
-  }
-
   try {
-    let user = await User.findOne({ email })
-    if (user) {
-      return res.status(400).json({ msg: 'Benutzer existiert bereits' })
+    const { firstName, lastName, email, password, confirmPassword } = req.body
+
+    // Basic validation
+    if (!email || !password || !firstName || !lastName || !confirmPassword) {
+      return res.status(400).json({ msg: 'Bitte alle Felder ausfüllen' })
     }
 
+    if (password !== confirmPassword) {
+      return res.status(400).json({ msg: 'Passwörter stimmen nicht überein' })
+    }
+
+    // Check if user exists
+    let user = await User.findOne({ email })
+    if (user) {
+      return res.status(400).json({ msg: 'Diese E-Mail-Adresse wird bereits verwendet' })
+    }
+
+    // Create verification code (6 digits)
+    const verificationCode = Math.floor(100000 + Math.random() * 900000).toString()
+    const verificationCodeExpires = new Date()
+    verificationCodeExpires.setHours(verificationCodeExpires.getHours() + 1) // 1 hour expiration
+
+    // Create new user
     user = new User({
+      firstName,
+      lastName,
       email,
       password,
-      firstName,
-      lastName
+      verified: false,
+      verificationCode,
+      verificationCodeExpires
     })
 
+    // Hash password
+    const salt = await bcrypt.genSalt(10)
+    user.password = await bcrypt.hash(password, salt)
+
+    // Save user
     await user.save()
 
+    // Send verification email
+    await emailService.sendVerificationEmail(user)
+
+    // Return success without token (user needs to verify first)
+    res.json({ 
+      success: true, 
+      msg: 'Registrierung erfolgreich! Bitte überprüfe deine E-Mails für den Bestätigungscode.'
+    })
+  } catch (err) {
+    console.error('Error in registration:', err)
+    res.status(500).json({ error: err.message })
+  }
+})
+
+// Email verification route
+router.post('/verify-email', async (req, res) => {
+  try {
+    const { email, code } = req.body
+
+    // Validate inputs
+    if (!email || !code) {
+      return res.status(400).json({ msg: 'Bitte E-Mail und Bestätigungscode angeben' })
+    }
+
+    // Find user by email
+    const user = await User.findOne({ email })
+    if (!user) {
+      return res.status(400).json({ msg: 'Benutzer nicht gefunden' })
+    }
+
+    // Check if already verified
+    if (user.verified) {
+      return res.status(400).json({ msg: 'E-Mail bereits bestätigt' })
+    }
+
+    // Check verification code
+    if (user.verificationCode !== code) {
+      return res.status(400).json({ msg: 'Falscher Bestätigungscode' })
+    }
+
+    // Check if code expired
+    if (new Date() > new Date(user.verificationCodeExpires)) {
+      return res.status(400).json({ msg: 'Bestätigungscode abgelaufen' })
+    }
+
+    // Update user
+    user.verified = true
+    user.verificationCode = null
+    user.verificationCodeExpires = null
+    await user.save()
+
+    // Generate JWT token
     const payload = {
       user: {
         id: user.id
@@ -86,24 +164,66 @@ router.post('/register', async (req, res) => {
     jwt.sign(
       payload,
       process.env.JWT_SECRET,
-      { expiresIn: '24h' },
+      { expiresIn: '7d' },
       (err, token) => {
         if (err) throw err
-        res.json({ 
-          token,
-          user: {
-            id: user.id,
-            email: user.email,
-            firstName: user.firstName,
-            lastName: user.lastName,
-            profileImage: user.profileImage
-          }
-        })
+        res.json({ token, user: {
+          id: user.id,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          email: user.email,
+          verified: user.verified
+        }})
       }
     )
   } catch (err) {
-    console.error('Registration error:', err)
-    res.status(500).send('Server Error')
+    console.error('Error verifying email:', err)
+    res.status(500).json({ error: err.message })
+  }
+})
+
+// Resend verification code
+router.post('/resend-verification', async (req, res) => {
+  try {
+    const { email } = req.body
+
+    // Validate inputs
+    if (!email) {
+      return res.status(400).json({ msg: 'Bitte E-Mail angeben' })
+    }
+
+    // Find user by email
+    const user = await User.findOne({ email })
+    if (!user) {
+      return res.status(400).json({ msg: 'Benutzer nicht gefunden' })
+    }
+
+    // Check if already verified
+    if (user.verified) {
+      return res.status(400).json({ msg: 'E-Mail bereits bestätigt' })
+    }
+
+    // Create new verification code
+    const verificationCode = Math.floor(100000 + Math.random() * 900000).toString()
+    const verificationCodeExpires = new Date()
+    verificationCodeExpires.setHours(verificationCodeExpires.getHours() + 1) // 1 hour expiration
+
+    // Update user
+    user.verificationCode = verificationCode
+    user.verificationCodeExpires = verificationCodeExpires
+    await user.save()
+
+    // Send verification email
+    await emailService.sendVerificationEmail(user)
+
+    // Return success
+    res.json({ 
+      success: true, 
+      msg: 'Neuer Bestätigungscode wurde gesendet. Bitte überprüfe deine E-Mails.'
+    })
+  } catch (err) {
+    console.error('Error resending verification code:', err)
+    res.status(500).json({ error: err.message })
   }
 })
 

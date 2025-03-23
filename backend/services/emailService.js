@@ -18,9 +18,10 @@ const transporter = nodemailer.createTransport({
  * @param {string} subject - email subject
  * @param {string} text - plain text content
  * @param {string} html - html content
+ * @param {Array} attachments - array of attachments
  * @returns {Promise} - nodemailer send result
  */
-const sendEmail = async ({ to, subject, text, html }) => {
+const sendEmail = async ({ to, subject, text, html, attachments = [] }) => {
   try {
     const mailOptions = {
       from: `"Study Simplifier" <${process.env.EMAIL_USER}>`,
@@ -28,6 +29,7 @@ const sendEmail = async ({ to, subject, text, html }) => {
       subject,
       text,
       html,
+      attachments
     };
 
     return await transporter.sendMail(mailOptions);
@@ -63,6 +65,7 @@ Dein Study Simplifier Team`;
   const html = `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
       <div style="background-color: #67329E; color: white; padding: 20px; text-align: center;">
+        <img src="cid:logo" alt="Study Simplifier Logo" style="max-width: 150px; margin-bottom: 10px;">
         <h1>Aufgabenerinnerung</h1>
       </div>
       <div style="padding: 20px; border: 1px solid #ddd; border-top: none;">
@@ -90,7 +93,14 @@ Dein Study Simplifier Team`;
     to: user.email,
     subject,
     text,
-    html
+    html,
+    attachments: [
+      {
+        filename: 'logo.png',
+        path: './public/icons/LogoStudySimplifier.png',
+        cid: 'logo'
+      }
+    ]
   });
 };
 
@@ -122,6 +132,7 @@ Dein Study Simplifier Team`;
   const html = `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
       <div style="background-color: #67329E; color: white; padding: 20px; text-align: center;">
+        <img src="cid:logo" alt="Study Simplifier Logo" style="max-width: 150px; margin-bottom: 10px;">
         <h1>Neue Funktion</h1>
       </div>
       <div style="padding: 20px; border: 1px solid #ddd; border-top: none;">
@@ -150,12 +161,75 @@ Dein Study Simplifier Team`;
     to: user.email,
     subject,
     text,
-    html
+    html,
+    attachments: [
+      {
+        filename: 'logo.png',
+        path: './public/icons/LogoStudySimplifier.png',
+        cid: 'logo'
+      }
+    ]
+  });
+};
+
+/**
+ * Send verification email with code
+ * @param {Object} user - user object with email and verification code
+ * @returns {Promise} - nodemailer send result
+ */
+const sendVerificationEmail = async (user) => {
+  const subject = 'Bestätige deine E-Mail-Adresse für Study Simplifier';
+  
+  const text = `Hallo ${user.firstName},
+
+Vielen Dank für deine Registrierung bei Study Simplifier!
+
+Dein Bestätigungscode: ${user.verificationCode}
+
+Bitte gib diesen Code auf der Bestätigungsseite ein, um deine E-Mail-Adresse zu verifizieren.
+
+Dieser Code ist 1 Stunde gültig.
+
+Viele Grüße,
+Dein Study Simplifier Team`;
+
+  const html = `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+      <div style="background-color: #67329E; color: white; padding: 20px; text-align: center;">
+        <img src="cid:logo" alt="Study Simplifier Logo" style="max-width: 150px; margin-bottom: 10px;">
+        <h1>E-Mail bestätigen</h1>
+      </div>
+      <div style="padding: 20px; border: 1px solid #ddd; border-top: none;">
+        <p>Hallo ${user.firstName},</p>
+        <p>Vielen Dank für deine Registrierung bei Study Simplifier!</p>
+        <div style="margin: 25px 0; text-align: center; background-color: #f0f0f0; padding: 15px; border-radius: 4px; font-size: 24px; letter-spacing: 2px;">
+          <strong>${user.verificationCode}</strong>
+        </div>
+        <p>Bitte gib diesen Code auf der Bestätigungsseite ein, um deine E-Mail-Adresse zu verifizieren.</p>
+        <p>Dieser Code ist <strong>1 Stunde</strong> gültig.</p>
+        <p>Viele Grüße,<br>Dein Study Simplifier Team</p>
+      </div>
+    </div>
+  `;
+
+  return sendEmail({
+    to: user.email,
+    subject,
+    text,
+    html,
+    attachments: [
+      {
+        filename: 'logo.png',
+        path: '../public/icons/LogoStudySimplifier.png',
+        cid: 'logo'
+      }
+    ]
   });
 };
 
 module.exports = {
   sendEmail,
   sendTaskDueNotification,
-  sendNewFeatureNotification
+  sendNewFeatureNotification,
+  sendVerificationEmail
 }; 

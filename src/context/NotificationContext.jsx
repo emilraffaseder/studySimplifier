@@ -1,6 +1,11 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 import { useAuth } from './AuthContext';
-import { getNotificationSettings, updateNotificationSettings } from '../services/api';
+import { 
+  getNotificationSettings, 
+  updateNotificationSettings, 
+  testEmailNotification,
+  testDesktopNotification
+} from '../services/api';
 
 const NotificationContext = createContext();
 
@@ -124,6 +129,58 @@ export const NotificationProvider = ({ children }) => {
     });
   };
 
+  // Test-Funktionen für Benachrichtigungen
+  const sendTestEmailNotification = async (password) => {
+    try {
+      setLoading(true);
+      setError(null);
+      const result = await testEmailNotification(password);
+      return { success: true, message: result.message };
+    } catch (err) {
+      console.error('Error sending test email notification:', err);
+      setError(err.response?.data?.msg || 'Test-Email konnte nicht gesendet werden');
+      return { success: false, error: err.response?.data?.msg || err.message };
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const sendTestDesktopNotification = async (password) => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      // Verifiziere das Passwort über API
+      const result = await testDesktopNotification(password);
+      
+      // Wenn Passwort verifiziert, zeige lokale Benachrichtigung an
+      if (result.success) {
+        if (!('Notification' in window) || Notification.permission !== 'granted') {
+          setError('Desktop-Benachrichtigungen sind nicht aktiviert oder erlaubt');
+          return { 
+            success: false, 
+            error: 'Desktop-Benachrichtigungen sind nicht aktiviert oder erlaubt'
+          };
+        }
+        
+        showDesktopNotification('Test Benachrichtigung', {
+          body: 'Dies ist eine Test-Benachrichtigung. Desktop-Benachrichtigungen funktionieren!',
+          requireInteraction: true
+        });
+        
+        return { success: true, message: 'Desktop-Benachrichtigung wurde angezeigt' };
+      }
+      
+      return result;
+    } catch (err) {
+      console.error('Error sending test desktop notification:', err);
+      setError(err.response?.data?.msg || 'Test-Benachrichtigung konnte nicht angezeigt werden');
+      return { success: false, error: err.response?.data?.msg || err.message };
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <NotificationContext.Provider
       value={{
@@ -134,7 +191,9 @@ export const NotificationProvider = ({ children }) => {
         updateSettings,
         requestDesktopPermission,
         showDesktopNotification,
-        showTaskDueNotification
+        showTaskDueNotification,
+        sendTestEmailNotification,
+        sendTestDesktopNotification
       }}
     >
       {children}
