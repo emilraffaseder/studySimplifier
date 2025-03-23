@@ -94,7 +94,7 @@ function AppContent() {
   return (
     <div className="flex flex-col md:flex-row min-h-screen bg-white dark:bg-[#1C1C1C] text-gray-900 dark:text-white transition-colors">
       <Sidebar />
-      <main className="flex-1 p-4 md:p-8 md:ml-64">
+      <main className="flex-1 p-4 md:p-8">
         <div className="flex justify-between items-center mb-8 md:mt-0 mt-14">
           <PageTitle />
           <div className="flex items-center gap-4">
